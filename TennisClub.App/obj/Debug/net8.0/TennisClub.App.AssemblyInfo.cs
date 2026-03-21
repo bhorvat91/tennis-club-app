@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TennisClub.App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e07bd0ff57e282a0304a1f6364ec9542a5bd289b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9c67807fce97576be754a0c34f091624f4a5c494")]
 [assembly: System.Reflection.AssemblyProductAttribute("TennisClub.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TennisClub.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
