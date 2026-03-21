@@ -34,6 +34,12 @@
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePlayer">Save</MudButton>
             <MudButton Variant="Variant.Outlined" OnClick="CancelForm" Class="ml-2">Cancel</MudButton>
         </MudCardActions>
+        @if (!string.IsNullOrEmpty(_formError))
+        {
+            <MudCardContent>
+                <MudAlert Severity="Severity.Error">@_formError</MudAlert>
+            </MudCardContent>
+        }
     </MudCard>
 }
 
@@ -68,6 +74,7 @@ else
     private bool _showForm = false;
     private Player _editPlayer = new();
     private DateTime? _dateOfBirth;
+    private string _formError = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,22 +90,31 @@ else
     {
         _editPlayer = new Player();
         _dateOfBirth = null;
+        _formError = string.Empty;
         _showForm = true;
     }
 
     private void CancelForm()
     {
+        _formError = string.Empty;
         _showForm = false;
     }
 
     private async Task SavePlayer()
     {
         if (string.IsNullOrWhiteSpace(_editPlayer.FirstName) || string.IsNullOrWhiteSpace(_editPlayer.LastName))
+        {
+            _formError = "First Name and Last Name are required.";
             return;
+        }
 
         if (!_dateOfBirth.HasValue)
+        {
+            _formError = "Date of Birth is required.";
             return;
+        }
 
+        _formError = string.Empty;
         _editPlayer.DateOfBirth = _dateOfBirth.Value;
 
         if (_editPlayer.Id == 0)

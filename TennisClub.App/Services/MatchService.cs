@@ -65,7 +65,7 @@ public class MatchService
         return players.Select(p =>
         {
             var wins = matches.Count(m => m.WinnerId == p.Id);
-            var losses = matches.Count(m => (m.Player1Id == p.Id || m.Player2Id == p.Id) && m.WinnerId != 0 && m.WinnerId != p.Id);
+            var losses = matches.Count(m => (m.Player1Id == p.Id || m.Player2Id == p.Id) && m.WinnerId != p.Id);
             return new StandingEntry
             {
                 Player = p,
