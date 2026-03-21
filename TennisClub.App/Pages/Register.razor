@@ -1,0 +1,67 @@
+@page "/register"
+@using Microsoft.AspNetCore.Identity
+@using MudBlazor
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Register - Tennis Club</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">🎾 Register</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="_email" Label="Email" Variant="Variant.Outlined" InputType="InputType.Email" Class="mb-3" />
+            <MudTextField @bind-Value="_password" Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" Class="mb-3" />
+            <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" Variant="Variant.Outlined" InputType="InputType.Password" Class="mb-3" />
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+            }
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="DoRegister">Register</MudButton>
+        </MudCardActions>
+        <MudCardContent>
+            <MudText Align="Align.Center">Already have an account? <MudLink Href="/login">Login</MudLink></MudText>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private string _confirmPassword = string.Empty;
+    private string _errorMessage = string.Empty;
+
+    private async Task DoRegister()
+    {
+        if (string.IsNullOrWhiteSpace(_email) || string.IsNullOrWhiteSpace(_password))
+        {
+            _errorMessage = "Please fill in all fields.";
+            return;
+        }
+        if (_password != _confirmPassword)
+        {
+            _errorMessage = "Passwords do not match.";
+            return;
+        }
+
+        var user = new IdentityUser { UserName = _email, Email = _email };
+        var result = await UserManager.CreateAsync(user, _password);
+
+        if (result.Succeeded)
+        {
+            await SignInManager.SignInAsync(user, false);
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        else
+        {
+            _errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+        }
+    }
+}

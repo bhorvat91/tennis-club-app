@@ -1,0 +1,42 @@
+@page "/standings"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using TennisClub.App.Services
+@using MudBlazor
+@inject MatchService MatchService
+
+<PageTitle>Standings - Tennis Club</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Standings</MudText>
+
+@if (_standings == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="_standings" Hover="true" Striped="true" Elevation="2">
+        <HeaderContent>
+            <MudTh>Rank</MudTh>
+            <MudTh>Player</MudTh>
+            <MudTh>Points</MudTh>
+            <MudTh>Wins</MudTh>
+            <MudTh>Losses</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Rank">@(_standings.IndexOf(context) + 1)</MudTd>
+            <MudTd DataLabel="Player">@context.Player.FirstName @context.Player.LastName</MudTd>
+            <MudTd DataLabel="Points"><MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.Player.RankingPoints</MudChip></MudTd>
+            <MudTd DataLabel="Wins"><MudText Style="color: green">@context.Wins</MudText></MudTd>
+            <MudTd DataLabel="Losses"><MudText Style="color: red">@context.Losses</MudText></MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<StandingEntry>? _standings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _standings = await MatchService.GetStandingsAsync();
+    }
+}

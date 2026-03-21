@@ -1,0 +1,87 @@
+@page "/"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using TennisClub.App.Models
+@using TennisClub.App.Services
+@using MudBlazor
+@inject PlayerService PlayerService
+@inject MatchService MatchService
+
+<PageTitle>Home - Tennis Club</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">🎾 Tennis Club Dashboard</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Recent Matches</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_recentMatches == null)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else if (!_recentMatches.Any())
+                {
+                    <MudText>No matches played yet.</MudText>
+                }
+                else
+                {
+                    <MudList T="Match">
+                        @foreach (var match in _recentMatches)
+                        {
+                            <MudListItem>
+                                <MudText>@match.Player1.FirstName @match.Player1.LastName vs @match.Player2.FirstName @match.Player2.LastName</MudText>
+                                <MudText Typo="Typo.caption">Score: @match.Score | Winner: @match.Winner.FirstName @match.Winner.LastName | @match.PlayedAt.ToString("MMM dd, yyyy")</MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Top Players</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_topPlayers == null)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else if (!_topPlayers.Any())
+                {
+                    <MudText>No players registered yet.</MudText>
+                }
+                else
+                {
+                    <MudList T="Player">
+                        @foreach (var (player, index) in _topPlayers.Select((p, i) => (p, i + 1)))
+                        {
+                            <MudListItem>
+                                <MudText>#@index - @player.FirstName @player.LastName</MudText>
+                                <MudText Typo="Typo.caption">@player.RankingPoints pts</MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<Match>? _recentMatches;
+    private List<Player>? _topPlayers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _recentMatches = await MatchService.GetRecentMatchesAsync(5);
+        _topPlayers = await PlayerService.GetTopPlayersAsync(5);
+    }
+}

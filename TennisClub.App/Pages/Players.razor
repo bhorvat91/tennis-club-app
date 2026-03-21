@@ -1,0 +1,150 @@
+@page "/players"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using TennisClub.App.Models
+@using TennisClub.App.Services
+@using MudBlazor
+@inject PlayerService PlayerService
+
+<PageTitle>Players - Tennis Club</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Players</MudText>
+
+@if (_showForm)
+{
+    <MudCard Class="mb-4">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">@(_editPlayer.Id == 0 ? "Add New Player" : "Edit Player")</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_editPlayer.FirstName" Label="First Name" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_editPlayer.LastName" Label="Last Name" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="_dateOfBirth" Label="Date of Birth" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePlayer">Save</MudButton>
+            <MudButton Variant="Variant.Outlined" OnClick="CancelForm" Class="ml-2">Cancel</MudButton>
+        </MudCardActions>
+        @if (!string.IsNullOrEmpty(_formError))
+        {
+            <MudCardContent>
+                <MudAlert Severity="Severity.Error">@_formError</MudAlert>
+            </MudCardContent>
+        }
+    </MudCard>
+}
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ShowAddForm" Class="mb-4">
+    Add Player
+</MudButton>
+
+@if (!string.IsNullOrEmpty(_deleteError))
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" ShowCloseIcon="true" CloseIconClicked="@(() => _deleteError = string.Empty)">@_deleteError</MudAlert>
+}
+
+@if (_players == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="_players" Hover="true" Striped="true" Elevation="2">
+        <HeaderContent>
+            <MudTh>First Name</MudTh>
+            <MudTh>Last Name</MudTh>
+            <MudTh>Date of Birth</MudTh>
+            <MudTh>Points</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="First Name">@context.FirstName</MudTd>
+            <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+            <MudTd DataLabel="Date of Birth">@context.DateOfBirth.ToString("MMM dd, yyyy")</MudTd>
+            <MudTd DataLabel="Points">@context.RankingPoints</MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeletePlayer(context.Id))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<Player>? _players;
+    private bool _showForm = false;
+    private Player _editPlayer = new();
+    private DateTime? _dateOfBirth;
+    private string _formError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPlayers();
+    }
+
+    private async Task LoadPlayers()
+    {
+        _players = await PlayerService.GetAllPlayersAsync();
+    }
+
+    private void ShowAddForm()
+    {
+        _editPlayer = new Player();
+        _dateOfBirth = null;
+        _formError = string.Empty;
+        _showForm = true;
+    }
+
+    private void CancelForm()
+    {
+        _formError = string.Empty;
+        _showForm = false;
+    }
+
+    private async Task SavePlayer()
+    {
+        if (string.IsNullOrWhiteSpace(_editPlayer.FirstName) || string.IsNullOrWhiteSpace(_editPlayer.LastName))
+        {
+            _formError = "First Name and Last Name are required.";
+            return;
+        }
+
+        if (!_dateOfBirth.HasValue)
+        {
+            _formError = "Date of Birth is required.";
+            return;
+        }
+
+        _formError = string.Empty;
+        _editPlayer.DateOfBirth = _dateOfBirth.Value;
+
+        if (_editPlayer.Id == 0)
+            await PlayerService.CreatePlayerAsync(_editPlayer);
+        else
+            await PlayerService.UpdatePlayerAsync(_editPlayer);
+
+        _showForm = false;
+        await LoadPlayers();
+    }
+
+    private string _deleteError = string.Empty;
+
+    private async Task DeletePlayer(int id)
+    {
+        var success = await PlayerService.DeletePlayerAsync(id);
+        if (!success)
+            _deleteError = "Cannot delete player: they have existing match records.";
+        else
+            _deleteError = string.Empty;
+        await LoadPlayers();
+    }
+}

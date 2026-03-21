@@ -1,0 +1,79 @@
+@page "/matches"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using TennisClub.App.Models
+@using TennisClub.App.Services
+@using MudBlazor
+@inject MatchService MatchService
+@inject PlayerService PlayerService
+
+<PageTitle>Matches - Tennis Club</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Matches</MudText>
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="4">
+        <MudSelect T="int?" Label="Filter by Player" @bind-Value="_filterPlayerId" Variant="Variant.Outlined" Clearable="true">
+            @if (_players != null)
+            {
+                @foreach (var player in _players)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)player.Id)">@player.FirstName @player.LastName</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilter" Class="mt-1">Filter</MudButton>
+    </MudItem>
+</MudGrid>
+
+@if (_matches == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="_matches" Hover="true" Striped="true" Elevation="2">
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Player 1</MudTh>
+            <MudTh>Player 2</MudTh>
+            <MudTh>Score</MudTh>
+            <MudTh>Winner</MudTh>
+            <MudTh>Tournament</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Date">@context.PlayedAt.ToString("MMM dd, yyyy")</MudTd>
+            <MudTd DataLabel="Player 1">@context.Player1.FirstName @context.Player1.LastName</MudTd>
+            <MudTd DataLabel="Player 2">@context.Player2.FirstName @context.Player2.LastName</MudTd>
+            <MudTd DataLabel="Score">@context.Score</MudTd>
+            <MudTd DataLabel="Winner"><MudChip T="string" Color="Color.Success" Size="Size.Small">@context.Winner.FirstName @context.Winner.LastName</MudChip></MudTd>
+            <MudTd DataLabel="Tournament">@(context.Tournament?.Name ?? "-")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<Match>? _matches;
+    private List<Player>? _players;
+    private int? _filterPlayerId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _players = await PlayerService.GetAllPlayersAsync();
+        await LoadMatches();
+    }
+
+    private async Task LoadMatches()
+    {
+        if (_filterPlayerId.HasValue)
+            _matches = await MatchService.GetMatchesByPlayerAsync(_filterPlayerId.Value);
+        else
+            _matches = await MatchService.GetAllMatchesAsync();
+    }
+
+    private async Task ApplyFilter()
+    {
+        await LoadMatches();
+    }
+}

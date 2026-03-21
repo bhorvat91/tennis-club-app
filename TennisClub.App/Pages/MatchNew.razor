@@ -1,0 +1,137 @@
+@page "/matches/new"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using TennisClub.App.Models
+@using TennisClub.App.Services
+@using MudBlazor
+@inject MatchService MatchService
+@inject PlayerService PlayerService
+@inject NavigationManager Navigation
+
+<PageTitle>New Match - Tennis Club</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Record New Match</MudText>
+
+@if (_players == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudCard>
+        <MudCardContent>
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" Label="Player 1" @bind-Value="_player1Id" Variant="Variant.Outlined" Required="true">
+                        @foreach (var player in _players)
+                        {
+                            <MudSelectItem T="int" Value="@player.Id">@player.FirstName @player.LastName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" Label="Player 2" @bind-Value="_player2Id" Variant="Variant.Outlined" Required="true">
+                        @foreach (var player in _players)
+                        {
+                            <MudSelectItem T="int" Value="@player.Id">@player.FirstName @player.LastName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_score" Label="Score (e.g. 6-3, 7-5)" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" Label="Winner" @bind-Value="_winnerId" Variant="Variant.Outlined" Required="true">
+                        @if (_player1Id != 0)
+                        {
+                            var p1 = _players.FirstOrDefault(p => p.Id == _player1Id);
+                            if (p1 != null)
+                            {
+                                <MudSelectItem T="int" Value="@p1.Id">@p1.FirstName @p1.LastName</MudSelectItem>
+                            }
+                        }
+                        @if (_player2Id != 0)
+                        {
+                            var p2 = _players.FirstOrDefault(p => p.Id == _player2Id);
+                            if (p2 != null)
+                            {
+                                <MudSelectItem T="int" Value="@p2.Id">@p2.FirstName @p2.LastName</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="_playedAt" Label="Match Date" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int?" Label="Tournament (Optional)" @bind-Value="_tournamentId" Variant="Variant.Outlined" Clearable="true">
+                        @if (_tournaments != null)
+                        {
+                            @foreach (var t in _tournaments)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)t.Id)">@t.Name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveMatch" Disabled="@(!IsFormValid())">Save Match</MudButton>
+            <MudButton Variant="Variant.Outlined" Href="/matches" Class="ml-2">Cancel</MudButton>
+        </MudCardActions>
+    </MudCard>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-2">@_errorMessage</MudAlert>
+    }
+}
+
+@code {
+    private List<Player>? _players;
+    private List<Tournament>? _tournaments;
+    private int _player1Id;
+    private int _player2Id;
+    private string _score = string.Empty;
+    private int _winnerId;
+    private DateTime? _playedAt = DateTime.UtcNow.Date;
+    private int? _tournamentId;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _players = await PlayerService.GetAllPlayersAsync();
+        _tournaments = await MatchService.GetAllTournamentsAsync();
+    }
+
+    private bool IsFormValid()
+        => _player1Id != 0 && _player2Id != 0 && _player1Id != _player2Id
+           && !string.IsNullOrWhiteSpace(_score) && _winnerId != 0 && _playedAt.HasValue;
+
+    private async Task SaveMatch()
+    {
+        if (_player1Id == _player2Id)
+        {
+            _errorMessage = "Player 1 and Player 2 must be different.";
+            return;
+        }
+        if (_winnerId != _player1Id && _winnerId != _player2Id)
+        {
+            _errorMessage = "Winner must be one of the two players.";
+            return;
+        }
+
+        var match = new Match
+        {
+            Player1Id = _player1Id,
+            Player2Id = _player2Id,
+            Score = _score,
+            WinnerId = _winnerId,
+            PlayedAt = _playedAt!.Value,
+            TournamentId = _tournamentId
+        };
+
+        await MatchService.CreateMatchAsync(match);
+        Navigation.NavigateTo("/matches");
+    }
+}
