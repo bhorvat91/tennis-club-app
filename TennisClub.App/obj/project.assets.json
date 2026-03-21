@@ -2871,7 +2871,7 @@
     ]
   },
   "packageFolders": {
-    "/home/runner/.nuget/packages/": {}
+    "/tmp/codeql-scratch-8588ee7bce96ce51/dbs/csharp/working/packages": {}
   },
   "project": {
     "version": "1.0.0",
@@ -2879,7 +2879,7 @@
       "projectUniqueName": "/home/runner/work/tennis-club-app/tennis-club-app/TennisClub.App/TennisClub.App.csproj",
       "projectName": "TennisClub.App",
       "projectPath": "/home/runner/work/tennis-club-app/tennis-club-app/TennisClub.App/TennisClub.App.csproj",
-      "packagesPath": "/home/runner/.nuget/packages/",
+      "packagesPath": "/tmp/codeql-scratch-8588ee7bce96ce51/dbs/csharp/working/packages",
       "outputPath": "/home/runner/work/tennis-club-app/tennis-club-app/TennisClub.App/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [

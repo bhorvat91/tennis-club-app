@@ -94,7 +94,7 @@ else
     private int _player2Id;
     private string _score = string.Empty;
     private int _winnerId;
-    private DateTime? _playedAt = DateTime.Today;
+    private DateTime? _playedAt = DateTime.UtcNow.Date;
     private int? _tournamentId;
     private string _errorMessage = string.Empty;
 

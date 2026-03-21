@@ -35,14 +35,18 @@ public class PlayerService
         await _db.SaveChangesAsync();
     }
 
-    public async Task DeletePlayerAsync(int id)
+    public async Task<bool> DeletePlayerAsync(int id)
     {
         var player = await _db.Players.FindAsync(id);
-        if (player != null)
-        {
-            _db.Players.Remove(player);
-            await _db.SaveChangesAsync();
-        }
+        if (player == null) return false;
+
+        bool hasMatches = await _db.Matches
+            .AnyAsync(m => m.Player1Id == id || m.Player2Id == id || m.WinnerId == id);
+        if (hasMatches) return false;
+
+        _db.Players.Remove(player);
+        await _db.SaveChangesAsync();
+        return true;
     }
 
     public async Task AddPointsAsync(int playerId, int points)

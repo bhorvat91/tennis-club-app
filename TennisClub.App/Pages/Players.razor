@@ -47,6 +47,11 @@
     Add Player
 </MudButton>
 
+@if (!string.IsNullOrEmpty(_deleteError))
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" ShowCloseIcon="true" CloseIconClicked="@(() => _deleteError = string.Empty)">@_deleteError</MudAlert>
+}
+
 @if (_players == null)
 {
     <MudProgressCircular Indeterminate="true" />
@@ -59,12 +64,17 @@ else
             <MudTh>Last Name</MudTh>
             <MudTh>Date of Birth</MudTh>
             <MudTh>Points</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="First Name">@context.FirstName</MudTd>
             <MudTd DataLabel="Last Name">@context.LastName</MudTd>
             <MudTd DataLabel="Date of Birth">@context.DateOfBirth.ToString("MMM dd, yyyy")</MudTd>
             <MudTd DataLabel="Points">@context.RankingPoints</MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeletePlayer(context.Id))" />
+            </MudTd>
         </RowTemplate>
     </MudTable>
 }
@@ -123,6 +133,18 @@ else
             await PlayerService.UpdatePlayerAsync(_editPlayer);
 
         _showForm = false;
+        await LoadPlayers();
+    }
+
+    private string _deleteError = string.Empty;
+
+    private async Task DeletePlayer(int id)
+    {
+        var success = await PlayerService.DeletePlayerAsync(id);
+        if (!success)
+            _deleteError = "Cannot delete player: they have existing match records.";
+        else
+            _deleteError = string.Empty;
         await LoadPlayers();
     }
 }
