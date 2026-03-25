@@ -2,8 +2,8 @@
 @using Microsoft.AspNetCore.Identity
 @using MudBlazor
 @inject UserManager<IdentityUser> UserManager
-@inject SignInManager<IdentityUser> SignInManager
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Register - Tennis Club</PageTitle>
 
@@ -56,8 +56,9 @@
 
         if (result.Succeeded)
         {
-            await SignInManager.SignInAsync(user, false);
-            Navigation.NavigateTo("/", forceLoad: true);
+            // Submit to a Razor Page over HTTP so the auth cookie is set properly.
+            // SignInManager cannot set cookies inside Blazor Server's SignalR context.
+            await JS.InvokeVoidAsync("submitLoginForm", _email, _password);
         }
         else
         {
