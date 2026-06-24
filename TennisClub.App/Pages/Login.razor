@@ -1,8 +1,9 @@
 @page "/login"
 @using Microsoft.AspNetCore.Identity
 @using MudBlazor
-@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Login - Tennis Club</PageTitle>
 
@@ -43,14 +44,15 @@
             return;
         }
 
-        var result = await SignInManager.PasswordSignInAsync(_email, _password, false, false);
-        if (result.Succeeded)
-        {
-            Navigation.NavigateTo("/", forceLoad: true);
-        }
-        else
+        var user = await UserManager.FindByEmailAsync(_email);
+        if (user == null || !await UserManager.CheckPasswordAsync(user, _password))
         {
             _errorMessage = "Invalid email or password.";
+            return;
         }
+
+        // Submit to a Razor Page over HTTP so the auth cookie is set properly.
+        // SignInManager cannot set cookies inside Blazor Server's SignalR context.
+        await JS.InvokeVoidAsync("submitLoginForm", _email, _password);
     }
 }
